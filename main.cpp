@@ -8,28 +8,51 @@ using namespace std;
 
 // задаем функцию из условия
 double function(double x){
-    double a = 1 - x*x*x*x;
+    double a = 1 - pow(x, 4.0);
     double y = pow(a, 1.0 / 3.0);
     return y;
 }
 
-vector<double> spline(double x0, double y0, double x1, double y1){
+int spline(double x0, double y0, double x1, double y1, double x2, double y2){
     // тут еще нужен цикл с условием: выполнять его, пока не найдем нужные коэффициенты
-    vector<double> coeff(4,0);
+    double coeff_L[4];
+    double coeff_R[4];
+    double coeff[8];
     double N = 1000;
-    coeff[0] = (double)(rand())/RAND_MAX * N;
-    coeff[1] = 2;
-    coeff[2] = 3;
-    coeff[3] = 4;
-    double a = coeff[0]; double b = coeff[1]; 
-    double c = coeff[2]; double d = coeff[3];
+    for(int i = 0; i < 4; i++){
+        coeff_L[i] = (double)(rand())/RAND_MAX * N;
+        coeff_R[i] = (double)(rand())/RAND_MAX * N;
+    }
 
-    if((a*(x0*x0*x0) + b*(x0*x0) + c*x0 + d == y0 &&
-    a*(x1*x1*x1) + b*(x1*x1) + c*x1 + d == y1) == true ){
-        double der_y0 = 3*(x0*x0) + 2*b*x0 + c; //вычисляем производные 
-        double der_y1 = 3*(x1*x1) + 2*b*x1 + c;
-        if(der_y0 == der_y1){
-            return coeff; // возвращаем вектор с нужными коеффициентами
+    double a1 = coeff_L[0]; double b1 = coeff_L[1]; 
+    double c1 = coeff_L[2]; double d1 = coeff_L[3];
+
+    double a2 = coeff_R[0]; double b2 = coeff_R[1]; 
+    double c2 = coeff_R[2]; double d2 = coeff_R[3];
+
+    if((  ( (a1*pow(x0, 3.0) + b1*pow(x0, 2.0) + c1*x0 + d1 == y0) &&
+            (a1*pow(x1, 3.0) + b1*pow(x1, 3.0) + c1*x1 + d1 == y1) )
+        && ( (a2*pow(x1, 3.0) + b2*pow(x1, 2.0) + c2*x0 + d2 == y1) &&
+            (a2*pow(x2, 3.0) + b2*pow(x2, 3.0) + c2*x2 + d2 == y2) ) ) == true ){
+        
+        double der_yL = 3*(x1, 2.0)*a1 + 2*b1*x1 + c1; //вычисляем первые производные 
+        double der_yR = 3*(x1, 2.0)*a2 + 2*b2*x1 + c2;
+        
+        if(der_yL == der_yR){
+            
+            double der2_yL = 6*a1*x1 + 2*b1; //вычисляем вторые производные
+            double der2_yR = 6*a2*x1 +2*b2;;
+            if(der2_yL == der2_yR){
+                ofstream f3out;
+                f3out.open("coeff.txt"); // окрываем файл для записи значений х
+                if (f3out.is_open()){
+                    for(int i = 0; i < 4; i++){
+                        f3out << coeff_L[i] << " " << coeff_R[i] << endl;
+                        return 0;
+                    }
+                }
+                f3out.close();
+            }
         }
     }
 }
@@ -62,8 +85,7 @@ int main(){
     fout.close();
 
     //формируем вектора нужных коэффициентов
-    vector<double> coeff_L = spline(dots_x[0], dots_y[0], dots_x[1], dots_y[1]);
-    vector<double> coeff_R = spline(dots_x[1], dots_y[1], dots_x[2], dots_y[2]);
+    spline(dots_x[0], dots_y[0], dots_x[1], dots_y[1], dots_x[2], dots_y[2]);
 
     //создаем выборку точек из [0;0,45] и (0.45,0.9] 
     // узнаем в какой сплайн попадает точка
